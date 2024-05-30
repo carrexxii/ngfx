@@ -1,0 +1,9 @@
+[submodule "lib/bx"]
+	path = lib/bx
+	url = https://github.com/bkaradzic/bx
+[submodule "lib/bgfx"]
+	path = lib/bgfx
+	url = https://github.com/bkaradzic/bgfx
+[submodule "lib/bimg"]
+	path = lib/bimg
+	url = https://github.com/bkaradzic/bimg
