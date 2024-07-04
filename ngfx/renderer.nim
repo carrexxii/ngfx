@@ -161,8 +161,9 @@ proc get_renderer_name*(kind: RendererKind): cstring             {.importc: "bgf
 proc reset*(w, h: uint32; flags: ResetFlag; format: TextureFormat) {.importc: "bgfx_reset".}
 proc frame*(capture: bool = false): uint32                         {.importc: "bgfx_frame".}
 
-proc set_view_clear*(view; flags: ClearFlag; colour: uint32; depth: cfloat; stencil: uint8) {.importc: "bgfx_set_view_clear".}
-proc set_view_rect*(view; x, y, w, h: uint16)                                               {.importc: "bgfx_set_view_rect" .}
+proc set_view_clear*(view; flags: ClearFlag; colour: uint32; depth: cfloat; stencil: uint8) {.importc: "bgfx_set_view_clear"    .}
+proc set_view_rect*(view; x, y, w, h: uint16)                                               {.importc: "bgfx_set_view_rect"     .}
+proc set_view_transform*(view; view_mat, proj_mat: pointer)                                 {.importc: "bgfx_set_view_transform".}
 {.pop.}
 
 {.push inline.}
@@ -179,14 +180,11 @@ proc set_clear*(view; flags: ClearFlag = Colour or Depth; colour = 0'u32; depth 
 
 # TODO
     # void bgfx_set_view_name(bgfx_view_id_t _id, const char* _name, int32_t _len);
-    # void bgfx_set_view_rect(bgfx_view_id_t _id, uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height);
     # void bgfx_set_view_rect_ratio(bgfx_view_id_t _id, uint16_t _x, uint16_t _y, bgfx_backbuffer_ratio_t _ratio);
     # void bgfx_set_view_scissor(bgfx_view_id_t _id, uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height);
-    # void bgfx_set_view_clear(bgfx_view_id_t _id, uint16_t _flags, uint32_t _rgba, float _depth, uint8_t _stencil);
     # void bgfx_set_view_clear_mrt(bgfx_view_id_t _id, uint16_t _flags, float _depth, uint8_t _stencil, uint8_t _c0, uint8_t _c1, uint8_t _c2, uint8_t _c3, uint8_t _c4, uint8_t _c5, uint8_t _c6, uint8_t _c7);
     # void bgfx_set_view_mode(bgfx_view_id_t _id, bgfx_view_mode_t _mode);
     # void bgfx_set_view_frame_buffer(bgfx_view_id_t _id, bgfx_frame_buffer_handle_t _handle);
-    # void bgfx_set_view_transform(bgfx_view_id_t _id, const void* _view, const void* _proj);
     # void bgfx_set_view_order(bgfx_view_id_t _id, uint16_t _num, const bgfx_view_id_t* _order);
     # void bgfx_reset_view(bgfx_view_id_t _id);
 

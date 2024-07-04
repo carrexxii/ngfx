@@ -165,12 +165,14 @@ proc create_index_buffer*(mem; flags: BufferFlag): IBO      {.importc: "bgfx_cre
 proc destroy_index_buffer*(ibo)                             {.importc: "bgfx_destroy_index_buffer".}
 proc set_index_buffer*(ibo; first_idx, num_indices: uint32) {.importc: "bgfx_set_index_buffer"    .}
 
-proc create_uniform*(name: cstring; kind: UniformKind; count: uint16): Uniform {.importc: "bgfx_create_uniform"  .}
-proc destroy_uniform*(uniform)                                                 {.importc: "bgfx_destroy_uniform" .}
-proc get_uniform_info*(uniform; info: ptr UniformInfo)                         {.importc: "bgfx_get_uniform_info".}
-proc set_uniform*(uniform; val: pointer; num: uint16)                          {.importc: "bgfx_set_uniform"     .}
+proc create_uniform*(name: cstring; kind: UniformKind; count: uint16 = 1): Uniform {.importc: "bgfx_create_uniform"  .}
+proc destroy_uniform*(uniform)                                                     {.importc: "bgfx_destroy_uniform" .}
+proc get_uniform_info*(uniform; info: ptr UniformInfo)                             {.importc: "bgfx_get_uniform_info".}
+proc set_uniform*(uniform; val: pointer; num: uint16)                              {.importc: "bgfx_set_uniform"     .}
 
 proc set_texture*(stage: ShaderStage; sampler: Uniform; handle: Texture; flags: SamplerFlag) {.importc: "bgfx_set_texture".}
+
+proc set_transform*(mat: pointer; count: uint16 = 1): uint32 {.importc: "bgfx_set_transform".}
 
 proc attachment_init*(attach: ptr Attachment; texture; access: Access; layer, layer_count, mip, resolve: uint16) {.importc: "bgfx_attachment_init".}
 {.pop.}
@@ -196,7 +198,7 @@ proc create_program*(name: string): Program =
 #~~~ Buffers ~~~#
 
 # VBO Layouts
-proc create_vbo_layout*(attrs: varargs[tuple[attr: Attrib; count: int; kind: AttribKind]]): VertexLayout =
+proc create_vertex_layout*(attrs: varargs[tuple[attr: Attrib; count: int; kind: AttribKind]]): VertexLayout =
     discard vertex_layout_begin(result.addr, get_renderer_kind())
     for (attr, count, kind) in attrs:
         discard vertex_layout_add(result.addr, attr, uint8 count, kind, true, false)
@@ -224,6 +226,8 @@ proc set_uniform*(uniform; val: pointer) =
     set_uniform(uniform, val, high uint16)
 
 # Textures
+
+# Transforms
 
 {.pop.}
 
@@ -292,7 +296,6 @@ proc set_uniform*(uniform; val: pointer) =
     # void bgfx_set_stencil(uint32_t _fstencil, uint32_t _bstencil);
     # uint16_t bgfx_set_scissor(uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height);
     # void bgfx_set_scissor_cached(uint16_t _cache);
-    # uint32_t bgfx_set_transform(const void* _mtx, uint16_t _num);
     # void bgfx_set_transform_cached(uint32_t _cache, uint16_t _num);
     # uint32_t bgfx_alloc_transform(bgfx_transform_t* _transform, uint16_t _num);
     # void bgfx_set_uniform(bgfx_uniform_handle_t _handle, const void* _value, uint16_t _num);
