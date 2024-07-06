@@ -1,5 +1,9 @@
 import std/[macros, tables, strutils, sequtils]
 
+const BuiltinFunctions = [
+    "vec2", "vec3", "vec4"
+]
+
 type
     ShaderKind* = enum
         Vertex
@@ -32,20 +36,42 @@ proc convert_type(backend: ShaderBackend; t: string): string =
         of $Vec2: "vec2"
         of $Vec3: "vec3"
         else:
-            echo "Invalid type"
+            echo "Failed to convert type " & t
             quit 1
+
+func header(backend: ShaderBackend): string =
+    case backend
+    of Nim : ""
+    of GLSL: "#version 460\n\n"
+
+func body_start(backend: ShaderBackend; kind: ShaderKind): string =
+    case backend
+    of Nim : result = ""
+    of GLSL:
+        if kind == Fragment:
+            result &= "layout(location = 0) out vec4 gl_ScreenColour;\n\n"
+        result &= "void main() {\n"
+
+func body_end(backend: ShaderBackend): string =
+    case backend
+    of Nim : ""
+    of GLSL: "}"
 
 proc write_input(backend: ShaderBackend; name, kind: string; loc: int): string =
     let fmt = case backend
     of Nim : "var $1: $2"
     of GLSL: "layout(location = $3) in $2 $1;"
-    fmt % [name, backend.convert_type kind, $loc] & "\n"
+
+    let t = backend.convert_type kind
+    fmt % [name, t, $loc] & "\n"
 
 proc write_output(backend: ShaderBackend; name, kind: string; loc: int): string =
     let fmt = case backend
     of Nim : "var $1: $2"
     of GLSL: "layout(location = $3) out $2 $1;"
-    fmt % [name, backend.convert_type kind, $loc] & "\n"
+
+    let t = backend.convert_type kind
+    fmt % [name, t, $loc] & "\n"
 
 proc write_assign(backend: ShaderBackend; lhs, rhs: NimNode): string =
     case lhs.kind
@@ -54,18 +80,37 @@ proc write_assign(backend: ShaderBackend; lhs, rhs: NimNode): string =
     else:
         echo "Failed to write assign for " & (repr lhs) & (repr rhs)
         quit 1
+
+    case backend
+    of Nim : discard
+    of GLSL: result &= ";"
     result &= "\n"
+
+proc write_call(backend: ShaderBackend; node: NimNode): string =
+    let name   = $node[0]
+    let params = node[1..^1]
+    if name in BuiltinFunctions:
+        case backend
+        of Nim : result = repr node
+        of GLSL:
+            result = name & "("
+            result &= params.map_it(backend.write_node it).join ", "
+            result &= ")"
 
 proc write_node(backend: ShaderBackend; node: NimNode): string =
     case node.kind
-    of nnkIdent: $node
+    of nnkIdent   : $node
+    of nnkFloatLit: repr node
     of nnkAsgn : backend.write_assign node[0], node[1]
+    of nnkCall : backend.write_call node
     else:
         echo "Failed to write node $1 ($2)" % [repr node, $node.kind]
         quit 1
 
 proc parse_inner(kind: ShaderKind; backend: ShaderBackend; body: NimNode): string =
     result = new_string_of_cap 10*1024
+    result &= backend.header
+
     var shader = Shader(kind: kind, body: new_nim_node nnkStmtList)
     var in_loc  = 0
     var out_loc = 0
@@ -96,20 +141,32 @@ proc parse_inner(kind: ShaderKind; backend: ShaderBackend; body: NimNode): strin
     for k, v in shader.inputs:
         result &= backend.write_input(k, v.kind, v.loc)
         idents[k] = v.kind
+    result &= "\n"
     for k, v in shader.outputs:
         result &= backend.write_output(k, v.kind, v.loc)
         idents[k] = v.kind
 
+    result &= "\n" & backend.body_start kind
     for node in shader.body:
         result &= backend.write_node node
+    result &= backend.body_end
+
+    result = case backend
+    of Nim : result
+    of GLSL:
+        case kind
+        of Vertex  : result.replace "result", "gl_Position"
+        of Fragment: result.replace "result", "gl_ScreenColour"
 
 macro parse(kind: static[ShaderKind]; backend: static[ShaderBackend]; body: untyped): string =
     new_lit kind.parse_inner(backend, body)
 
 macro parse_all(kind: static[ShaderKind]; body: untyped) =
-    for b in ShaderBackend:
-        echo "======= " & $b & " ======="
-        echo new_lit kind.parse_inner(b, body)
+    echo "\n======== " & $kind & " ========"
+    echo "==================" & "=".repeat ($kind).len
+    for backend in ShaderBackend:
+        echo "======= " & $backend & " ======="
+        echo new_lit kind.parse_inner(backend, body)
 
 Vertex.parse_all:
     let
@@ -117,9 +174,15 @@ Vertex.parse_all:
         Vnormal: Input[Vec3]
         Vuv    : Input[Vec2]
         Fnormal: Output[Vec3]
-        Fuv    : Output[Vec3]
+        Fuv    : Output[Vec2]
 
     Fnormal = Vnormal
     Fuv     = Vuv
-    result  = Vpos
+    result  = vec4(Vpos, 1.0)
 
+Fragment.parse_all:
+    let
+        Fnormal: Input[Vec3]
+        Fuv    : Input[Vec3]
+
+    result = Fnormal
