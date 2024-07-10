@@ -1,7 +1,5 @@
 import common, memory, renderer
 
-const ShaderDir = "./shaders/bin"
-
 type
     AttribKind* {.size: sizeof(cint).} = enum
         UInt8
@@ -146,14 +144,14 @@ proc create_program*(vs, fs: Shader; destroy_shaders = true): Program     {.impo
 proc create_compute_program*(cs: Shader; destroy_shaders = true): Program {.importc: "bgfx_create_compute_program".}
 proc destroy_program*(program: Program)                                   {.importc: "bgfx_destroy_program"       .}
 
-proc create_vertex_layout*(vlayptr): VertexLayoutHandle                                            {.importc: "bgfx_create_vertex_layout" .}
-proc destroy_vertex_layout*(handle: VertexLayoutHandle)                                            {.importc: "bgfx_destroy_vertex_layout".}
-proc vertex_layout_begin*(vlayptr; renderer: RendererKind): ptr VertexLayout                       {.importc: "bgfx_vertex_layout_begin"  .}
-proc vertex_layout_add*(vlayptr; attr; u8_count; attr_kind; normalized; as_int): ptr VertexLayout  {.importc: "bgfx_vertex_layout_add"    .}
-proc vertex_layout_end*(vlayptr)                                                                   {.importc: "bgfx_vertex_layout_end"    .}
-proc vertex_layout_decode*(vlayptr; attr; u8_count_arr; attr_kind_arr; normalized_arr; as_int_arr) {.importc: "bgfx_vertex_layout_decode" .}
-proc vertex_layout_has*(vlayptr; attr): bool                                                       {.importc: "bgfx_vertex_layout_has"    .}
-proc vertex_layout_skip*(vlayptr; u8_count): ptr VertexLayout                                      {.importc: "bgfx_vertex_layout_skip"   .}
+proc create_vertex_layout*(vlayptr): VertexLayoutHandle                                            {.importc: "bgfx_create_vertex_layout"            .}
+proc destroy_vertex_layout*(handle: VertexLayoutHandle)                                            {.importc: "bgfx_destroy_vertex_layout"           .}
+proc vertex_layout_begin*(vlayptr; renderer: RendererKind): ptr VertexLayout                       {.importc: "bgfx_vertex_layout_begin", discardable.}
+proc vertex_layout_add*(vlayptr; attr; u8_count; attr_kind; normalized; as_int): ptr VertexLayout  {.importc: "bgfx_vertex_layout_add"  , discardable.}
+proc vertex_layout_end*(vlayptr)                                                                   {.importc: "bgfx_vertex_layout_end"  , discardable.}
+proc vertex_layout_decode*(vlayptr; attr; u8_count_arr; attr_kind_arr; normalized_arr; as_int_arr) {.importc: "bgfx_vertex_layout_decode"            .}
+proc vertex_layout_has*(vlayptr; attr): bool                                                       {.importc: "bgfx_vertex_layout_has"               .}
+proc vertex_layout_skip*(vlayptr; u8_count): ptr VertexLayout                                      {.importc: "bgfx_vertex_layout_skip"              .}
 
 proc create_vertex_buffer*(mem; vlayptr; flags: BufferFlag): VBO                                {.importc: "bgfx_create_vertex_buffer"  .}
 proc destroy_vertex_buffer*(vbo)                                                                {.importc: "bgfx_destroy_vertex_buffer" .}
@@ -179,51 +177,51 @@ proc attachment_init*(attach: ptr Attachment; texture; access: Access; layer, la
 
 {.push inline.}
 
-proc create_program*(name: string): Program =
+proc create_program*(vs_path, fs_path: string): Program =
     try:
-        var
-            vs_data = read_file &"{ShaderDir}/{name}.vs.bin"
-            fs_data = read_file &"{ShaderDir}/{name}.fs.bin"
-            vs_mem  = copy(cast[pointer](vs_data.cstring), uint32 vs_data.len)
-            fs_mem  = copy(cast[pointer](fs_data.cstring), uint32 fs_data.len)
-        let vs = create_shader vs_mem
-        let fs = create_shader fs_mem
+        let
+            vs_data = read_file vs_path
+            fs_data = read_file fs_path
+            vs_mem  = copy(cast[pointer](vs_data[0].addr), uint32 vs_data.len)
+            fs_mem  = copy(cast[pointer](fs_data[0].addr), uint32 fs_data.len)
+            vs      = create_shader vs_mem
+            fs      = create_shader fs_mem
         result = create_program(vs, fs, true)
     except IOError:
-        echo red &"Filed to open files for shader program '{name}'"
+        echo red &"Failed to open files for shader program '{vs_path} / {fs_path}'"
         return
 
-    echo green &"Created shader program for '{name}'"
+    echo green &"Created shader program for '{vs_path} / {fs_path}'"
 
 #~~~ Buffers ~~~#
 
 # VBO Layouts
 proc create_vertex_layout*(attrs: varargs[tuple[attr: Attrib; count: int; kind: AttribKind]]): VertexLayout =
-    discard vertex_layout_begin(result.addr, get_renderer_kind())
+    vertex_layout_begin result.addr, get_renderer_kind()
     for (attr, count, kind) in attrs:
-        discard vertex_layout_add(result.addr, attr, uint8 count, kind, true, false)
+        vertex_layout_add result.addr, attr, uint8 count, kind, true, false
     vertex_layout_end result.addr
 
 # VBOs
 proc create_vbo*(mem; layout: VertexLayout; flags: BufferFlag = None): VBO =
-    create_vertex_buffer(mem, layout.addr, flags)
+    create_vertex_buffer mem, layout.addr, flags
 
 proc set_vbo*(vert_stream; vbo; start_vertex, num_vertices: Natural) =
-    set_vertex_buffer(vert_stream, vbo, uint32 start_vertex, uint32 num_vertices)
+    set_vertex_buffer vert_stream, vbo, uint32 start_vertex, uint32 num_vertices
 
 # IBOs
 proc create_ibo*(mem; flags: BufferFlag = Index32): IBO =
-    create_index_buffer(mem, flags)
+    create_index_buffer mem, flags
 
 proc set_ibo*(ibo; first_idx, idx_count: Natural) =
-    set_index_buffer(ibo, uint32 first_idx, uint32 idx_count)
+    set_index_buffer ibo, uint32 first_idx, uint32 idx_count
 
 # Uniforms
-proc create_uniform(name: string; kind: UniformKind; count = 1): Uniform =
-    create_uniform(cstring name, kind, uint16 count)
+proc create_uniform*(name: string; kind: UniformKind; count = 1): Uniform =
+    create_uniform cstring name, kind, uint16 count
 
 proc set_uniform*(uniform; val: pointer) =
-    set_uniform(uniform, val, high uint16)
+    set_uniform uniform, val, high uint16
 
 # Textures
 

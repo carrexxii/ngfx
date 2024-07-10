@@ -1,8 +1,10 @@
+from std/os        import `/`, parent_dir
 from std/strformat import `&`
 from std/sugar     import `->`
 export `&`, `->`
 
-const BGFXPath* = "lib/libbgfx.so"
+const CWD = current_source_path.parent_dir()
+const BGFXPath* = CWD / "../lib/libbgfx.so"
 
 type BGFXError* = object of CatchableError
 

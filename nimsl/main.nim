@@ -186,3 +186,4 @@ Fragment.parse_all:
         Fuv    : Input[Vec3]
 
     result = Fnormal
+
