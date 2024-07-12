@@ -38,7 +38,7 @@ while running:
 
     frame_num = int frame false
 
-# ngfx.shutdown()
+ngfx.shutdown()
 destroy_window window
 sdl.quit()
 

@@ -33,7 +33,7 @@ proc set_condition*(e; handle: OcclusionQuery; visible: bool)                   
 proc set_stencil*(e; front, back: StencilFlag)                                                  {.importc: "bgfx_encoder_set_stencil"                                 .}
 proc set_scissor*(e; x, y, w, h: uint16): ScissorCache                                          {.importc: "bgfx_encoder_set_scissor"                                 .}
 proc set_scissor_cached*(e; cache: ScissorCache): ScissorCache                                  {.importc: "bgfx_encoder_set_scissor_cached"                          .}
-proc set_transform*(e; matrices: pointer; count: uint16 = 1): MatrixCache                       {.importc: "bgfx_encoder_set_transform" discardable                   .}
+proc set_transform*(e; matrices: pointer; count: uint16 = 1): MatrixCache                       {.importc: "bgfx_encoder_set_transform", discardable                  .}
 proc set_transform_cached*(e; cache: MatrixCache; count: uint16)                                {.importc: "bgfx_encoder_set_transform_cached"                        .}
 proc set_uniform*(e; uniform: Uniform; count: uint16)                                           {.importc: "bgfx_encoder_set_uniform"                                 .}
 proc set_index_buffer*(e; ibo: IBO; start, count: uint32)                                       {.importc: "bgfx_encoder_set_index_buffer"                            .}

@@ -2,19 +2,19 @@ import common, memory, renderer
 
 type
     AttribKind* {.size: sizeof(cint).} = enum
-        UInt8
-        UInt10
-        Int16
-        Half
-        Float
+        akUInt8
+        akUInt10
+        akInt16
+        akHalf
+        akFloat
 
     Attrib* {.size: sizeof(cint).} = enum
-        Position
-        Normal
-        Tangent, BiTangent
-        Colour0, Colour1, Colour2, Colour3
-        Indices, Weight
-        TexCoord0, TexCoord1, TexCoord2, TexCoord3, TexCoord4, TexCoord5, TexCoord6, TexCoord7
+        aPosition
+        aNormal
+        aTangent, aBiTangent
+        aColour0, aColour1, aColour2, aColour3
+        aIndices, aWeight
+        aTexCoord0, aTexCoord1, aTexCoord2, aTexCoord3, aTexCoord4, aTexCoord5, aTexCoord6, aTexCoord7
 
 type
     Shader*       = distinct uint16
@@ -80,11 +80,11 @@ type
         is_cube_map* : bool
 
     UniformKind* = enum
-        Sampler
+        ukSampler
         _
-        Vec4
-        Mat3
-        Mat4
+        ukVec4
+        ukMat3
+        ukMat4
 
     UniformInfo* = object
         name* : array[256, char]
@@ -92,9 +92,9 @@ type
         count*: uint16
 
     Access* = enum
-        Read
-        Write
-        ReadWrite
+        aRead
+        aWrite
+        aReadWrite
 
     Attachment* = object
         access*     : Access
@@ -322,3 +322,4 @@ proc set_uniform*(uniform; val: pointer) =
     # void bgfx_set_image(uint8_t _stage, bgfx_texture_handle_t _handle, uint8_t _mip, bgfx_access_t _access, bgfx_texture_format_t _format);
     # uintptr_t bgfx_override_internal_texture_ptr(bgfx_texture_handle_t _handle, uintptr_t _ptr);
     # uintptr_t bgfx_override_internal_texture(bgfx_texture_handle_t _handle, uint16_t _width, uint16_t _height, uint8_t _numMips, bgfx_texture_format_t _format, uint64_t _flags);
+

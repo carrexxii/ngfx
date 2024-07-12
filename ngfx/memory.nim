@@ -26,16 +26,17 @@ proc make_ref*(data; size): Memory                                              
 proc make_ref_release*(data; size; release_fn: ReleaseFn; userdata: pointer): Memory {.importc: "bgfx_make_ref_release".}
 {.pop.}
 
-{.push inline, raises: [].}
+{.push inline.}
 
 proc copy*(data; size: int): Memory =
-    copy(data, uint32 size)
+    copy data, uint32 size
 
 proc make_ref*[T](data: openArray[T]; release_fn: ReleaseFn = nil): Memory =
     let size = data.len*(sizeof T)
     if release_fn == nil:
-        make_ref(data[0].addr, size)
+        make_ref data[0].addr, size
     else:
-        make_ref_release(data[0].addr, size, release_fn, nil)
+        make_ref_release data[0].addr, size, release_fn, nil
 
 {.pop.}
+
