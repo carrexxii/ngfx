@@ -46,3 +46,4 @@ func get_x11_nwh_and_ndt*(window: pointer): tuple[nwh, ndt: pointer] =
     assert window.get_wm_info wm_info.addr
     result.nwh = wm_info.info.x11.window
     result.ndt = wm_info.info.x11.display
+

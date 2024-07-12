@@ -203,14 +203,14 @@ proc create_vertex_layout*(attrs: varargs[tuple[attr: Attrib; count: int; kind: 
     vertex_layout_end result.addr
 
 # VBOs
-proc create_vbo*(mem; layout: VertexLayout; flags: BufferFlag = None): VBO =
+proc create_vbo*(mem; layout: VertexLayout; flags: BufferFlag = none): VBO =
     create_vertex_buffer mem, layout.addr, flags
 
 proc set_vbo*(vert_stream; vbo; start_vertex, num_vertices: Natural) =
     set_vertex_buffer vert_stream, vbo, uint32 start_vertex, uint32 num_vertices
 
 # IBOs
-proc create_ibo*(mem; flags: BufferFlag = Index32): IBO =
+proc create_ibo*(mem; flags: BufferFlag = index32): IBO =
     create_index_buffer mem, flags
 
 proc set_ibo*(ibo; first_idx, idx_count: Natural) =

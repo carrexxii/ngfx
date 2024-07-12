@@ -3,8 +3,8 @@ import ngfx/[common, debug]
 func is_valid*(handle: uint16): bool =
     handle != high uint16
 
-import ngfx/flags, ngfx/memory, ngfx/shaders, ngfx/encoder, ngfx/renderer
-export      flags,      memory,      shaders,      encoder,      renderer
+import ngfx/[flags, memory, shaders, encoder, renderer]
+export flags, memory, shaders, encoder, renderer
 
 #[ -------------------------------------------------------------------- ]#
 
@@ -42,7 +42,7 @@ type
 
     Init* = object
         kind*         : RendererKind
-        vendor_id*    : VendorID
+        vendor_id*    : PCIIDFlag
         device_id*    : uint16
         capabilities* : uint64
         debug*        : bool
@@ -65,24 +65,23 @@ proc shutdown*()               {.importc: "bgfx_shutdown" .} # This causes a cra
                                                              # but the solution is in a cpp function...
 {.pop.}
 
-{.push inline, raises: [].}
+{.push inline.}
 
 proc create_init*(): Init =
     init_ctor result.addr
 
-proc init*(ci: Init) {.raises: BGFXError.} =
-    if (init ci.addr) != true:
-        raise new_exception(BGFXError, "Failed to initialized BGFX")
+proc init*(ci: Init): bool =
+    init ci.addr
 
-proc reset*(w, h: int; flags: ResetFlag = VSync; fmt: TextureFormat = RGBA8) =
-    reset(uint32 w, uint32 h, flags, fmt)
+proc reset*(w, h: int; flags: ResetFlag = vSync; fmt: TextureFormat = tfRGBA8) =
+    reset uint32 w, uint32 h, flags, fmt
 
 {.pop.}
 
 proc init*(nwh, ndt: pointer; w, h: int;
-           renderer   : RendererKind = Auto;
-           vendor_id  : VendorID     = None;
-           reset_flags: ResetFlag    = VSync) =
+           renderer   : RendererKind = rkAuto;
+           vendor_id  : PCIIDFlag    = none;
+           reset_flags: ResetFlag    = vSync) =
     var ci: Init
     init_ctor ci.addr
     ci.platform_data.nwh  = nwh
@@ -97,3 +96,4 @@ proc init*(nwh, ndt: pointer; w, h: int;
     echo &"\tRenderer  -> {get_renderer_kind()}"
     echo &"\tVendor ID -> {ci.vendor_id}"
     echo &"\tDevice ID -> {ci.device_id}"
+

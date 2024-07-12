@@ -51,9 +51,9 @@ proc set_instance_data_buffer_from_vertex_buffer*(e; vbo: VBO; start, count: uin
 proc set_instance_data_buffer_from_dynamic_vertex_buffer*(e; vbo: DVBO; start, count: uint32)   {.importc: "bgfx_encoder_set_instance_data_from_dynamic_vertex_buffer".}
 proc set_instance_count*(e; count: uint32)                                                      {.importc: "bgfx_encoder_set_instance_count"                          .}
 proc set_texture*(e; stage; sampler; texture; flags: SamplerFlag)                               {.importc: "bgfx_encoder_set_texture"                                 .}
-proc set_state*(e; state: StateFlag = None; colour: uint32 = 0)                                 {.importc: "bgfx_encoder_set_state"                                   .}
+proc set_state*(e; state: StateFlag = none; colour: uint32 = 0)                                 {.importc: "bgfx_encoder_set_state"                                   .}
 
-proc submit*(e; view; program; depth: uint32 = 0; discards: DiscardFlag = None)                {.importc: "bgfx_encoder_submit"                .}
+proc submit*(e; view; program; depth: uint32 = 0; discards: DiscardFlag = none)                {.importc: "bgfx_encoder_submit"                .}
 proc submit_occlusion_query*(e; view; program; query: OcclusionQuery; depth: uint32; discards) {.importc: "bgfx_encoder_submit_occlusion_query".}
 proc submit_indirect*(e; view; program; indirect_buf; start, count, depth: uint32; discards)   {.importc: "bgfx_encoder_indirect"              .}
 proc submit_indirect_count*(e; view; program; indirect_buf; start: uint32; ibo: IBO; discards) {.importc: "bgfx_encoder_indirect_count"        .}
@@ -71,10 +71,10 @@ proc stop*(e) =
     `end` e
 
 proc set_vbo*(e; stream; vbo: VBO; start, count: uint32) =
-    e.set_vertex_buffer(stream, vbo, start, count)
+    e.set_vertex_buffer stream, vbo, start, count
 
 proc set_ibo*(e; ibo: IBO; start, count: uint32) =
-    e.set_index_buffer(ibo, start, count)
+    e.set_index_buffer ibo, start, count
 
 {.pop.}
 
@@ -88,3 +88,4 @@ proc set_ibo*(e; ibo: IBO; start, count: uint32) =
 
     # BGFX_C_API void bgfx_encoder_dispatch(bgfx_encoder_t* _this, bgfx_view_id_t _id, bgfx_program_handle_t _program, uint32_t _numX, uint32_t _numY, uint32_t _numZ, uint8_t _flags);
     # BGFX_C_API void bgfx_encoder_dispatch_indirect(bgfx_encoder_t* _this, bgfx_view_id_t _id, bgfx_program_handle_t _program, bgfx_indirect_buffer_handle_t _indirectHandle, uint32_t _start, uint32_t _num, uint8_t _flags);
+

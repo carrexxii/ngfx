@@ -12,7 +12,7 @@ let (nwh, ndt) = get_x11_nwh_and_ndt window
 init(nwh, ndt, WinW, WinH)
 
 let view = ViewID 0
-set_debug Text
+set_debug dfText
 view.set_clear colour = 0x003535FF
 
 var
@@ -41,3 +41,4 @@ while running:
 # ngfx.shutdown()
 destroy_window window
 sdl.quit()
+

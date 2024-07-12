@@ -1,97 +1,86 @@
-import common
+import common, flags
 
 type
-    ## PCI Adapters
-    VendorID* {.size: sizeof(uint16).} = enum
-        None      = 0x0000_0000
-        Software  = 0x0000_0001
-        AMD       = 0x0000_1002
-        Apple     = 0x0000_106b
-        Nvidia    = 0x0000_10DE
-        ARM       = 0x0000_13B5
-        Microsoft = 0x0000_1414
-        Intel     = 0x0000_8086
-
     RendererKind* {.size: sizeof(cint).} = enum
-        NoOp
-        AGC
-        Direct3D11
-        Direct3D12
-        GNM
-        Metal
-        NVN
-        OpenGLES
-        OpenGL
-        Vulkan
-        Auto
+        rkNoOp
+        rkAGC
+        rkDirect3D11
+        rkDirect3D12
+        rkGNM
+        rkMetal
+        rkNVN
+        rkOpenGLES
+        rkOpenGL
+        rkVulkan
+        rkAuto
 
     TextureFormat* {.size: sizeof(cint).} = enum
-        BC1, BC2, BC3, BC4, BC5, BC6H, BC7,
-        ETC1, ETC2, ETC2A, ETC2A1, PTC12,
-        PTC14, PTC12A, PTC14A, PTC22, PTC24, ATC,
-        ATCE, ATCI,
-        ASTC4X4, ASTC5X4, ASTC5X5, ASTC6X5, ASTC6X6, ASTC8X5, ASTC8X6, ASTC8X8, ASTC10X5,
-        ASTC10X6, ASTC10X8, ASTC10X10, ASTC12X10, ASTC12X12,
-        Unknown,
-        R1, A8, R8, R8I, R8U, R8S, R16, R16I, R16U, R16F, R16S, R32I, R32U, R32F, RG8,
-        RG8I, RG8U, RG8S, RG16, RG16I, RG16U, RG16F, RG16S, RG32I, RG32U, RG32F, RGB8,
-        RGB8I, RGB8U, RGB8S, RGB9E5F, BGRA8, RGBA8, RGBA8I, RGBA8U, RGBA8S, RGBA16, RGBA16I,
-        RGBA16U, RGBA16F, RGBA16S, RGBA32I, RGBA32U, RGBA32F, B5G6R5, R5G6B5, BGRA4, RGBA4, BGR5A1, RGB5A1, RGB10A2, RG11B10F,
-        UnknownDepth,
-        D16, D24, D24S8, D32, D16F, D24F, D32F, D0S8,
+        tfBC1, tfBC2, tfBC3, tfBC4, tfBC5, tfBC6H, tfBC7,
+        tfETC1, tfETC2, tfETC2A, tfETC2A1, tfPTC12,
+        tfPTC14, tfPTC12A, tfPTC14A, tfPTC22, tfPTC24, tfATC,
+        tfATCE, tfATCI,
+        tfASTC4X4, tfASTC5X4, tfASTC5X5, tfASTC6X5, tfASTC6X6, tfASTC8X5, tfASTC8X6, tfASTC8X8, tfASTC10X5,
+        tfASTC10X6, tfASTC10X8, tfASTC10X10, tfASTC12X10, tfASTC12X12,
+        tfUnknown,
+        tfR1, tfA8, tfR8, tfR8I, tfR8U, tfR8S, tfR16, tfR16I, tfR16U, tfR16F, tfR16S, tfR32I, tfR32U, tfR32F, tfRG8,
+        tfRG8I, tfRG8U, tfRG8S, tfRG16, tfRG16I, tfRG16U, tfRG16F, tfRG16S, tfRG32I, tfRG32U, tfRG32F, tfRGB8,
+        tfRGB8I, tfRGB8U, tfRGB8S, tfRGB9E5F, tfBGRA8, tfRGBA8, tfRGBA8I, tfRGBA8U, tfRGBA8S, tfRGBA16, tfRGBA16I,
+        tfRGBA16U, tfRGBA16F, tfRGBA16S, tfRGBA32I, tfRGBA32U, tfRGBA32F, tfB5G6R5, tfR5G6B5, tfBGRA4, tfRGBA4, tfBGR5A1, tfRGB5A1, tfRGB10A2, tfRG11B10F,
+        tfUnknownDepth,
+        tfD16, tfD24, tfD24S8, tfD32, tfD16F, tfD24F, tfD32F, tfD0S8,
 
     BackbufferRatio* {.size: sizeof(cint).} = enum
-        Equal
-        Half
-        Quarter
-        Eighth
-        Sixteenth
-        Double
+        bbrEqual
+        bbrHalf
+        bbrQuarter
+        bbrEighth
+        bbrSixteenth
+        bbrDouble
 
     OcclusionQueryResult* {.size: sizeof(cint).} = enum
-        Invisible
-        Visible
-        NoResult
+        oqrInvisible
+        oqrVisible
+        oqrNoResult
 
     Topology* {.size: sizeof(cint).} = enum
-        TriList
-        TriStrip
-        LineList
-        LineStrip
-        PointList
+        tTriList
+        tTriStrip
+        tLineList
+        tLineStrip
+        tPointList
 
     TopologyConvert* {.size: sizeof(cint).} = enum
-        TriListFlipWinding
-        TriStripFlipWinding
-        TriListToLineList
-        TriStripToTriList
-        LienStripToLineList
+        tcTriListFlipWinding
+        tcTriStripFlipWinding
+        tcTriListToLineList
+        tcTriStripToTriList
+        tcLienStripToLineList
 
     TopologySort* {.size: sizeof(cint).} = enum
-        DirFrontToBackMin
-        DirFrontToBackAvg
-        DirFrontToBackMax
-        DirBackToFrontMin
-        DirBackToFrontAvg
-        DirBackToFrontMax
-        DistFrontToBackMin
-        DistFrontToBackAvg
-        DistFrontToBackMax
-        DistBackToFrontMin
-        DistBackToFrontAvg
-        DistBackToFrontMax
+        tsDirFrontToBackMin
+        tsDirFrontToBackAvg
+        tsDirFrontToBackMax
+        tsDirBackToFrontMin
+        tsDirBackToFrontAvg
+        tsDirBackToFrontMax
+        tsDistFrontToBackMin
+        tsDistFrontToBackAvg
+        tsDistFrontToBackMax
+        tsDistBackToFrontMin
+        tsDistBackToFrontAvg
+        tsDistBackToFrontMax
 
     ViewMode* {.size: sizeof(cint).} = enum
-        Default
-        Sequential
-        DepthAscending
-        DepthDescending
+        vmDefault
+        vmSequential
+        vmDepthAscending
+        vmDepthDescending
 
     RenderFrame* {.size: sizeof(cint).} = enum
-        NoContext
-        Render
-        Timeout
-        Exiting
+        rfNoContext
+        rfRender
+        rfTimeout
+        rfExiting
 
 type
     ViewID* = distinct uint16
@@ -106,7 +95,7 @@ type
         gpu_frame_num* : int64
 
     GPUInfo* = object
-        vendor_id*: VendorID
+        vendor_id*: PCIIDFlag
         device_id*: uint16
 
     GPULimits* = object
@@ -138,7 +127,7 @@ type
     RendererCapabilities* = object
         kind*              : RendererKind
         supported*         : uint64
-        vendor_id*         : VendorID
+        vendor_id*         : PCIIDFlag
         device_id*         : uint16
         homogeneous_depth* : bool
         origin_bottom_left*: bool
@@ -173,7 +162,7 @@ proc get_supported_renderers*(): seq[RendererKind] =
     result = new_seq_of_cap[RendererKind] ren_count
     discard get_supported_renderers(ren_count, result[0].addr)
 
-proc set_clear*(view; flags: ClearFlag = Colour or Depth; colour = 0'u32; depth = 1.0; stencil = 0'u8) =
+proc set_clear*(view; flags: ClearFlag = colour or depth; colour = 0'u32; depth = 1.0; stencil = 0'u8) =
     set_view_clear(view, flags, colour, cfloat depth, uint8 stencil)
 
 {.pop.}

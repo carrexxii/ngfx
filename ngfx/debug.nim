@@ -1,27 +1,25 @@
-import common, renderer
+import common, bitgen, renderer
 
-type
-    Fatal* {.size: sizeof(cint).} = enum
-        DebugCheck
-        InvalidShader
-        UnableToInitialize
-        UnableToCreateTexture
-        DeviceLost
+type BGFXFatal* {.size: sizeof(cint).} = enum
+    bfDebugCheck
+    bfInvalidShader
+    bfUnableToInitialize
+    bfUnableToCreateTexture
+    bfDeviceLost
 
-    DebugFlag* {.size: sizeof(cint).} = enum
-        None      = 0x0000_0000
-        WireFrame = 0x0000_0001
-        IFH       = 0x0000_0002
-        Stats     = 0x0000_0004
-        Text      = 0x0000_0008
-        Profiler  = 0x0000_0010
+type DebugFlag* = distinct uint32
+DebugFlag.gen_bit_ops(
+    dfWireFrame, dfIFH, dfStats, dfText,
+    dfProfiler
+)
+const dfNone* = DebugFlag 0
 
 type
     CallbackInterface* = object
         vtable*: ptr CallbackVTable
 
     CallbackVTable = object
-        fatal*                 :  (ptr CallbackInterface, file_path: cstring, line: uint16, code: Fatal, str: cstring) -> void
+        fatal*                 :  (ptr CallbackInterface, file_path: cstring, line: uint16, code: BGFXFatal, str: cstring) -> void
         trace_vargs*           : ((ptr CallbackInterface, file_path: cstring, line: uint16, fmt: cstring) {.varargs.} -> void)
         profiler_begin*        :  (ptr CallbackInterface, name: cstring, abgr: uint32, file_path: cstring, line: uint16) -> void
         profiler_begin_literal*:  (ptr CallbackInterface, name: cstring, abgr: uint32, file_paht: cstring, line: uint16) -> void
@@ -95,12 +93,13 @@ proc get_stats*(): ptr RendererStats       {.importc: "bgfx_get_stats".}
 {.push inline.}
 
 proc clear*(attr = 0'u8; small = false) =
-    dbg_text_clear(attr, small)
+    dbg_text_clear attr, small
 
 proc print*(x, y: int; msg: string; attr = 0x0F'u8) =
-    dbg_text_printf(uint16 x, uint16 y, attr, cstring msg)
+    dbg_text_printf uint16 x, uint16 y, attr, cstring msg
 
 proc image*(x, y, w, h: int; data: pointer; pitch = 0) =
-    dbg_text_image(uint16 x, uint16 y, uint16 w, uint16 h, data, uint16 pitch)
+    dbg_text_image uint16 x, uint16 y, uint16 w, uint16 h, data, uint16 pitch
 
 {.pop.}
+
