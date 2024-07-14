@@ -1,3 +1,7 @@
+# This file is a part of NGfx. Copyright (C) 2024 carrexxii.
+# It is distributed under the terms of the Apache License, Version 2.0.
+# For a copy, see the LICENSE file or <https://apache.org/licenses/>.
+
 type TextureFlag* = distinct uint64
 func `and`*(a, b: TextureFlag): TextureFlag {.borrow.}
 func `or`* (a, b: TextureFlag): TextureFlag {.borrow.}

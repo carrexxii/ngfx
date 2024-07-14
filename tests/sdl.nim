@@ -1,3 +1,7 @@
+# This file is a part of NGfx. Copyright (C) 2024 carrexxii.
+# It is distributed under the terms of the Apache License, Version 2.0.
+# For a copy, see the LICENSE file or <https://apache.org/licenses/>.
+
 type
     EventKind* {.size: sizeof(cint).} = enum
         Quit = 0x100
@@ -23,7 +27,6 @@ type
         subsystem*: cint
         info*     : WM
 
-# Init video and events
 proc init*(flags = 0x0000_4020): cint                                 {.importc: "SDL_Init"           .}
 proc quit*()                                                          {.importc: "SDL_Quit"           .}
 proc get_version*(version: ptr uint32)                                {.importc: "SDL_GetVersion"     .}

@@ -1,3 +1,7 @@
+# This file is a part of NGfx. Copyright (C) 2024 carrexxii.
+# It is distributed under the terms of the Apache License, Version 2.0.
+# For a copy, see the LICENSE file or <https://apache.org/licenses/>.
+
 # TODO
     # void bgfx_vertex_pack(const float _input[4], bool _inputNormalized, bgfx_attrib_t _attr, const bgfx_vertex_layout_t * _layout, void* _data, uint32_t _index);
     # void bgfx_vertex_unpack(float _output[4], bgfx_attrib_t _attr, const bgfx_vertex_layout_t * _layout, const void* _data, uint32_t _index);
