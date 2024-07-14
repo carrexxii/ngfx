@@ -16,6 +16,18 @@ type
         aIndices, aWeight
         aTexCoord0, aTexCoord1, aTexCoord2, aTexCoord3, aTexCoord4, aTexCoord5, aTexCoord6, aTexCoord7
 
+    UniformKind* = enum
+        ukSampler
+        _
+        ukVec4
+        ukMat3
+        ukMat4
+
+    Access* = enum
+        aRead
+        aWrite
+        aReadWrite
+
 type
     Shader*       = distinct uint16
     Program*      = distinct uint16
@@ -79,22 +91,10 @@ type
         bpp*         : uint8
         is_cube_map* : bool
 
-    UniformKind* = enum
-        ukSampler
-        _
-        ukVec4
-        ukMat3
-        ukMat4
-
     UniformInfo* = object
         name* : array[256, char]
         kind* : UniformKind
         count*: uint16
-
-    Access* = enum
-        aRead
-        aWrite
-        aReadWrite
 
     Attachment* = object
         access*     : Access
@@ -109,7 +109,7 @@ type
 from renderer import ViewID
 
 using
-    mem        : Memory
+    memptr     : ptr Memory
     vlay_handle: VertexLayoutHandle
     vlayptr    : ptr VertexLayout
     vert_stream: VertexStream
@@ -121,6 +121,9 @@ using
 
     uniform    : Uniform
     uniform_arr: ptr Uniform
+
+    tex_info: ptr TextureInfo
+    tex_fmt : TextureFormat
 
     attr_kind    : AttribKind
     attr_kind_arr: ptr AttribKind
@@ -135,7 +138,7 @@ using
     normalized_arr: ptr bool
 
 {.push dynlib: BGFXPath.}
-proc create_shader*(memory: Memory): Shader                                 {.importc: "bgfx_create_shader"      .}
+proc create_shader*(memptr): Shader                                         {.importc: "bgfx_create_shader"      .}
 proc destroy_shader*(shader: Shader)                                        {.importc: "bgfx_destroy_shader"     .}
 proc get_shader_uniforms*(shader: Shader; uniform_arr; max: uint16): uint16 {.importc: "bgfx_get_shader_uniforms".}
 proc set_shader_name*(shader: Shader; name: cstring; len: int32)            {.importc: "bgfx_get_shader_name"    .}
@@ -153,13 +156,13 @@ proc vertex_layout_decode*(vlayptr; attr; u8_count_arr; attr_kind_arr; normalize
 proc vertex_layout_has*(vlayptr; attr): bool                                                       {.importc: "bgfx_vertex_layout_has"               .}
 proc vertex_layout_skip*(vlayptr; u8_count): ptr VertexLayout                                      {.importc: "bgfx_vertex_layout_skip"              .}
 
-proc create_vertex_buffer*(mem; vlayptr; flags: BufferFlag): VBO                                {.importc: "bgfx_create_vertex_buffer"  .}
+proc create_vertex_buffer*(memptr; vlayptr; flags: BufferFlag): VBO                             {.importc: "bgfx_create_vertex_buffer"  .}
 proc destroy_vertex_buffer*(vbo)                                                                {.importc: "bgfx_destroy_vertex_buffer" .}
 proc set_vertex_buffer*(vert_stream; vbo; start_vertex, num_vertices: uint32)                   {.importc: "bgfx_set_vertex_buffer"     .}
 proc set_vertex_with_layout*(vert_stream; vbo; start_vertex, num_vertices: uint32; vlay_handle) {.importc: "bgfx_set_vertex_with_layout".}
 proc set_vertex_count*(num_vertices: uint32)                                                    {.importc: "bgfx_set_vertex_count"      .}
 
-proc create_index_buffer*(mem; flags: BufferFlag): IBO      {.importc: "bgfx_create_index_buffer" .}
+proc create_index_buffer*(memptr; flags: BufferFlag): IBO   {.importc: "bgfx_create_index_buffer" .}
 proc destroy_index_buffer*(ibo)                             {.importc: "bgfx_destroy_index_buffer".}
 proc set_index_buffer*(ibo; first_idx, num_indices: uint32) {.importc: "bgfx_set_index_buffer"    .}
 
@@ -168,6 +171,9 @@ proc destroy_uniform*(uniform)                                                  
 proc get_uniform_info*(uniform; info: ptr UniformInfo)                             {.importc: "bgfx_get_uniform_info".}
 proc set_uniform*(uniform; val: pointer; num: uint16)                              {.importc: "bgfx_set_uniform"     .}
 
+proc calc_texture_size*(tex_info; w, h, d: uint16; is_cube_map, has_mips: bool; layer_count: uint16; tex_fmt)       {.importc: "bgfx_calc_texture_size".}
+proc create_texture*(memptr; flags: uint64; skip: uint8; tex_info): Texture                                         {.importc: "bgfx_create_texture"   .}
+proc create_texture_2d*(w, h: uint16; has_mips: bool; layer_count: uint16; tex_fmt; flags: uint64; memptr): Texture {.importc: "bgfx_create_texture_2d".}
 proc set_texture*(stage: ShaderStage; sampler: Uniform; handle: Texture; flags: SamplerFlag) {.importc: "bgfx_set_texture".}
 
 proc set_transform*(mat: pointer; count: uint16 = 1): uint32 {.importc: "bgfx_set_transform".}
@@ -193,6 +199,9 @@ proc create_program*(vs_path, fs_path: string): Program =
 
     echo green &"Created shader program for '{vs_path} / {fs_path}'"
 
+proc destroy*(program: Program) =
+    destroy_program program
+
 #~~~ Buffers ~~~#
 
 # VBO Layouts
@@ -202,16 +211,19 @@ proc create_vertex_layout*(attrs: varargs[tuple[attr: Attrib; count: int; kind: 
         vertex_layout_add result.addr, attr, uint8 count, kind, true, false
     vertex_layout_end result.addr
 
+proc destroy*(handle: VertexLayoutHandle) =
+    destroy_vertex_layout handle
+
 # VBOs
-proc create_vbo*(mem; layout: VertexLayout; flags: BufferFlag = none): VBO =
-    create_vertex_buffer mem, layout.addr, flags
+proc create_vbo*(memptr; layout: VertexLayout; flags: BufferFlag = none): VBO =
+    create_vertex_buffer memptr, layout.addr, flags
 
 proc set_vbo*(vert_stream; vbo; start_vertex, num_vertices: Natural) =
     set_vertex_buffer vert_stream, vbo, uint32 start_vertex, uint32 num_vertices
 
 # IBOs
-proc create_ibo*(mem; flags: BufferFlag = index32): IBO =
-    create_index_buffer mem, flags
+proc create_ibo*(memptr; flags: BufferFlag = index32): IBO =
+    create_index_buffer memptr, flags
 
 proc set_ibo*(ibo; first_idx, idx_count: Natural) =
     set_index_buffer ibo, uint32 first_idx, uint32 idx_count
@@ -220,10 +232,21 @@ proc set_ibo*(ibo; first_idx, idx_count: Natural) =
 proc create_uniform*(name: string; kind: UniformKind; count = 1): Uniform =
     create_uniform cstring name, kind, uint16 count
 
+proc destroy*(uniform) =
+    destroy_uniform uniform
+
 proc set_uniform*(uniform; val: pointer) =
     set_uniform uniform, val, high uint16
 
 # Textures
+proc create_texture*(data: pointer; fmt: TextureFormat; w, h: SomeInteger; sampler_flags = sampler.none;
+                     tex_flags = texture.none; has_mips = false; layer_count: SomeInteger = 1): Texture =
+    var info: TextureInfo
+    calc_texture_size info.addr, w, h, 1, false, has_mips, layer_count, fmt
+    echo info
+    let mem = copy(data, info.storage_size)
+    let flags = (uint64 sampler_flags) or (uint64 tex_flags)
+    create_texture_2d uint16 w, uint16 h, has_mips, uint16 layer_count, fmt, flags, mem
 
 # Transforms
 
@@ -258,9 +281,6 @@ proc set_uniform*(uniform; val: pointer) =
 
     # bool bgfx_is_texture_valid(uint16_t _depth, bool _cubeMap, uint16_t _numLayers, bgfx_texture_format_t _format, uint64_t _flags);
     # bool bgfx_is_frame_buffer_valid(uint8_t _num, const bgfx_attachment_t* _attachment);
-    # void bgfx_calc_texture_size(bgfx_texture_info_t * _info, uint16_t _width, uint16_t _height, uint16_t _depth, bool _cubeMap, bool _hasMips, uint16_t _numLayers, bgfx_texture_format_t _format);
-    # bgfx_texture_handle_t bgfx_create_texture(const bgfx_memory_t* _mem, uint64_t _flags, uint8_t _skip, bgfx_texture_info_t* _info);
-    # bgfx_texture_handle_t bgfx_create_texture_2d(uint16_t _width, uint16_t _height, bool _hasMips, uint16_t _numLayers, bgfx_texture_format_t _format, uint64_t _flags, const bgfx_memory_t* _mem);
     # bgfx_texture_handle_t bgfx_create_texture_2d_scaled(bgfx_backbuffer_ratio_t _ratio, bool _hasMips, uint16_t _numLayers, bgfx_texture_format_t _format, uint64_t _flags);
     # bgfx_texture_handle_t bgfx_create_texture_3d(uint16_t _width, uint16_t _height, uint16_t _depth, bool _hasMips, bgfx_texture_format_t _format, uint64_t _flags, const bgfx_memory_t* _mem);
     # bgfx_texture_handle_t bgfx_create_texture_cube(uint16_t _size, bool _hasMips, uint16_t _numLayers, bgfx_texture_format_t _format, uint64_t _flags, const bgfx_memory_t* _mem);

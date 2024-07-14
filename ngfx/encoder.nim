@@ -76,6 +76,9 @@ proc set_vbo*(e; stream; vbo: VBO; start, count: uint32) =
 proc set_ibo*(e; ibo: IBO; start, count: uint32) =
     e.set_index_buffer ibo, start, count
 
+proc set_texture*(e; sampler; texture; flags = SamplerFlag 0) =
+    e.set_texture ShaderStage 0, sampler, texture, flags
+
 {.pop.}
 
 # TODO:

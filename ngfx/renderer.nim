@@ -163,7 +163,7 @@ proc get_supported_renderers*(): seq[RendererKind] =
     discard get_supported_renderers(ren_count, result[0].addr)
 
 proc set_clear*(view; flags: ClearFlag = colour or depth; colour = 0'u32; depth = 1.0; stencil = 0'u8) =
-    set_view_clear(view, flags, colour, cfloat depth, uint8 stencil)
+    set_view_clear view, flags, colour, cfloat depth, uint8 stencil
 
 {.pop.}
 

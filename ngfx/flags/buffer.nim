@@ -1,5 +1,6 @@
 type BufferFlag* = distinct uint16
-func `or`*(a, b: BufferFlag): BufferFlag {.borrow.}
+func `and`*(a, b: BufferFlag): BufferFlag {.borrow.}
+func `or`* (a, b: BufferFlag): BufferFlag {.borrow.}
 const
     computeFormat8x1*   = BufferFlag 0x0001
     computeFormat8x2*   = BufferFlag 0x0002
